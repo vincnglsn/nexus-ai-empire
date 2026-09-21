@@ -76,13 +76,13 @@ Un pitch daté de la veille convertit mieux qu'un cas d'école générique — c
 ### Aujourd'hui (1h) :
 [x] `crisis_dashboard.py` déployé publiquement : https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 [x] Lien Stripe vérifié le 21/09 : checkout fonctionnel, 49€/mois (abonnement, pas un achat unique) — renommer le produit Stripe "Accès API OSINT Premium" → "Nexus AI - Supply Chain Shield"
-[ ] Publier le POST LINKEDIN n°1 de `VENTE_KIT_NEXUS.md`
-[ ] Envoyer 5 cold emails à des PME import/export de votre réseau (variante 1)
+[ ] Publier le POST LINKEDIN n°1 de `VENTE_KIT_NEXUS.md` (daté aujourd'hui dans `linkedin_posts.csv`)
+[x] 5 cold emails envoyés le 21/09 (FE Components, Dynasource, Terre Exotique, Beasy World Sourcing, Darriah Company) — depuis vinc.nglsn@gmail.com
 
 ### Cette semaine :
 [ ] POST LINKEDIN n°2 et n°3 (voir dates disponibles dans `linkedin_posts.csv`, déjà mis à jour avec 3 nouveaux posts datés du crise du jour)
-[ ] Contacter 2-3 transitaires/commissionnaires en douane (email partenaire du kit)
-[ ] 15-20 cold emails PME supplémentaires
+[x] 2 emails partenaires en brouillon (vinc.nglsn@gmail.com) : GFSLogistics (Marseille, commercial@gfslogistics.fr) et IdrisMans Transit (Paris, idris@idrismans.com) — à valider/envoyer
+[ ] 15-20 cold emails PME supplémentaires (5 déjà envoyés le 21/09)
 
 ### Objectif J+7 :
 → 10 démos/tests avec fichier réel
