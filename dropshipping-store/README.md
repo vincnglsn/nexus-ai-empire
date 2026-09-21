@@ -11,9 +11,9 @@ legging sculptant taille haute, effet push-up.
 
 ## Avant la mise en ligne publique
 
-1. **Créer le Stripe Payment Link** pour "Legging Sculptant Push-Up" à 34,90€, avec collecte d'adresse de livraison et
-   des variantes taille (S/M/L/XL/XXL) activée. Remplacer `#STRIPE_PAYMENT_LINK_ICI` dans `index.html` (bouton "Je commande maintenant")
-   par l'URL réelle du Payment Link.
+1. ✅ **Stripe Payment Link créé** : https://buy.stripe.com/00w8wP6AU5TJ6Id2Cp87K03
+   (produit "Legging Sculptant Push-Up Taille Haute", 34,90€, livraison France, champ Taille en liste déroulante,
+   collecte nom + adresse de facturation/livraison). Déjà intégré dans `index.html`.
 2. **Compléter les mentions légales** (`mentions-legales.html`) : les champs `[À COMPLÉTER]` (SIRET, statut juridique, adresse)
    sont obligatoires légalement en France avant d'ouvrir la boutique à de vrais clients.
 3. **Déployer** : créer un nouveau projet Vercel pointant sur ce dépôt avec comme "Root Directory" `dropshipping-store/`
