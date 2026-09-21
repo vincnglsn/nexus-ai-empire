@@ -17,6 +17,7 @@ data/
 *.db
 prospects_pme.csv
 leads.csv
+scratch_5_cold_emails_draft.md
 
 # Logs
 *.log
