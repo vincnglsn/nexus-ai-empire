@@ -76,7 +76,7 @@ Un pitch daté de la veille convertit mieux qu'un cas d'école générique — c
 ### Aujourd'hui (1h) :
 [x] `crisis_dashboard.py` déployé publiquement : https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 [x] Lien Stripe vérifié le 21/09 : checkout fonctionnel, 49€/mois (abonnement, pas un achat unique) — renommer le produit Stripe "Accès API OSINT Premium" → "Nexus AI - Supply Chain Shield"
-[ ] Publier le POST LINKEDIN n°1 de `VENTE_KIT_NEXUS.md` (daté aujourd'hui dans `linkedin_posts.csv`)
+[x] POST LINKEDIN n°1 publié le 21/09 via Buffer (canal LinkedIn de Vincent Nageleisen, connecté aujourd'hui)
 [x] 5 cold emails envoyés le 21/09 (FE Components, Dynasource, Terre Exotique, Beasy World Sourcing, Darriah Company) — depuis vinc.nglsn@gmail.com
 
 ### Cette semaine :
