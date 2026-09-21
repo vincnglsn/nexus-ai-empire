@@ -32,7 +32,7 @@ Si vous importez d'Asie ou du Moyen-Orient, votre Supply Chain est déjà expos�
 → Génère en 1 clic un plan de continuité avec fournisseurs alternatifs et surcoût fret estimé
 
 Testez avec votre propre fichier Excel. 49€/mois, résiliable à tout moment.
-👉 [LIEN STRIPE / LANDING PAGE]
+👉 https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 P.S. : Transitaire ou commissionnaire en douane ? J'ai un programme partenaire avec commission récurrente. DM.
 
@@ -57,7 +57,7 @@ Après Nexus AI :
 Un conteneur bloqué 3 semaines, c'est en moyenne 50 000€ de marge perdue pour une PME industrielle.
 Nexus AI coûte 49€/mois.
 
-👉 [LIEN]
+👉 https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 ---
 #Achats #Industrie #Risque #SaaS #CEO
@@ -76,7 +76,7 @@ Avec les tensions actuelles (Ormuz, Mer Rouge, Mer Noire), ce n'est plus une hyp
 
 Nexus AI croise votre fichier fournisseurs avec les alertes mondiales en direct et vous donne un plan B avant d'en avoir besoin.
 
-👉 Testez avec votre fichier fournisseurs, 49€/mois : [LIEN]
+👉 Testez avec votre fichier fournisseurs, 49€/mois : https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 ---
 #SupplyChain #Logistique #GestionDeRisque #PME #Industrie
@@ -99,7 +99,7 @@ C'est la question à laquelle Nexus AI (Supply Chain Shield) répond. Vous impor
 
 49€/mois, résiliable à tout moment, testez avec votre propre fichier.
 
-[LIEN]
+https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 [Prénom expéditeur]
 ---
@@ -116,7 +116,7 @@ Nexus AI coûte 49€/mois et vous donne, en 2 minutes, un plan de continuité a
 
 Avec la Mer Rouge et le Détroit d'Ormuz sous tension en ce moment, c'est le bon moment pour tester avec votre propre fichier fournisseurs.
 
-[LIEN]
+https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 Démo de 10 min si vous préférez : [CALENDLY LINK]
 
@@ -135,7 +135,7 @@ Ce n'est pas un cas d'école. Si une partie de vos flux transite par ces zones, 
 
 Nexus AI analyse votre fichier fournisseurs et vous dit exactement où se situe votre exposition, avec un plan de secours prêt à l'emploi.
 
-10 min pour tester avec vos propres données ? [LIEN]
+10 min pour tester avec vos propres données ? https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 
 [Prénom expéditeur]
 ---

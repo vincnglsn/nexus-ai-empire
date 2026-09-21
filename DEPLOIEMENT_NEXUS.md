@@ -32,7 +32,7 @@ Ce qui manque encore, c'est uniquement la mise en avant publique + la prospectio
 2. **Si elle pointe déjà sur `crisis_dashboard.py`** : il suffit de pousser (voir plus bas) → redéploiement automatique.
 3. **Sinon, créer une nouvelle app** : "Create app" → repo `vincnglsn/nexus-ai-empire` → branche `main` → main file path : `crisis_dashboard.py` → Deploy.
 4. **Secrets** (Settings de l'app → Secrets) : coller `GEMINI_API_KEY = "ta_cle"` (même valeur que celle utilisée en local).
-5. Résultat : une URL publique fixe du style `nexus-ai-empire.streamlit.app` ou `xxx-crisis-dashboard.streamlit.app`, à utiliser dans les posts LinkedIn et cold emails du kit.
+5. ✅ Fait le 21/09 : l'app est en ligne à **https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app** (déjà reliée à `origin/main`, redéploiement automatique confirmé après le push). Vérifié : paywall à jour, alerte Mer Rouge/Ormuz visible. URL déjà intégrée dans `VENTE_KIT_NEXUS.md`.
 
 ### Pousser le code (à valider par toi avant que je le fasse)
 ```bash
@@ -74,7 +74,7 @@ Un pitch daté de la veille convertit mieux qu'un cas d'école générique — c
 ## ════════════════════════════════════════════════════════════
 
 ### Aujourd'hui (1h) :
-[ ] Déployer `crisis_dashboard.py` publiquement (Étape 1)
+[x] `crisis_dashboard.py` déployé publiquement : https://nexus-ai-empire-6yrflyffrz2l6jxaxtk9gf.streamlit.app
 [x] Lien Stripe vérifié le 21/09 : checkout fonctionnel, 49€/mois (abonnement, pas un achat unique) — renommer le produit Stripe "Accès API OSINT Premium" → "Nexus AI - Supply Chain Shield"
 [ ] Publier le POST LINKEDIN n°1 de `VENTE_KIT_NEXUS.md`
 [ ] Envoyer 5 cold emails à des PME import/export de votre réseau (variante 1)
