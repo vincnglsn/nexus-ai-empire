@@ -116,8 +116,17 @@ def rechercher_entreprises(q, naf, departement, effectif_min, effectif_max, limi
 
 
 def extraire_ligne(ent):
-    """Transforme une entrée de l'API en ligne de lead exploitable."""
-    siege = ent.get("siege", {})
+    """Transforme une entrée de l'API en ligne de lead exploitable.
+
+    L'adresse retenue est celle de l'établissement qui a effectivement matché
+    la recherche (ent["matching_etablissements"][0]), pas systématiquement le
+    siège social : un cabinet dont le siège est à Biarritz peut avoir une
+    agence à Paris qui matche un filtre --departement 75. Afficher l'adresse
+    du siège dans ce cas induirait en erreur sur la localisation réelle du
+    lead trouvé.
+    """
+    matching = ent.get("matching_etablissements") or []
+    etab = matching[0] if matching else ent.get("siege", {})
     dirigeants = ent.get("dirigeants", [])
     prenom = ""
     for d in dirigeants:
@@ -139,9 +148,9 @@ def extraire_ligne(ent):
         "secteur": ent.get("activite_principale", ""),
         "ca_estime": ca_estime,
         "effectif": f"{bornes[0]}-{bornes[1]}" if bornes[1] < 999999 else f"{bornes[0]}+",
-        "ville": siege.get("libelle_commune", ""),
-        "code_postal": siege.get("code_postal", ""),
-        "siret": siege.get("siret", ""),
+        "ville": etab.get("libelle_commune", ""),
+        "code_postal": etab.get("code_postal", ""),
+        "siret": etab.get("siret", ""),
         "siren": ent.get("siren", ""),
     }
 
