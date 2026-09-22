@@ -317,11 +317,12 @@ def personnaliser_auto(template: str, contact: dict, exemple_client: str = "") -
         "offre_label":    offre_label,
         # Si aucun exemple réel n'est fourni (--exemple-client), on reste volontairement
         # générique plutôt que d'inventer un chiffre ou un témoignage client fictif.
+        # `secteur` est un code NAF brut (ex: "69.10Z"), pas un libellé lisible — on
+        # évite délibérément de l'insérer tel quel dans un email.
         "exemple_client": exemple_client or (
-            f"Je travaille actuellement avec plusieurs entreprises du secteur "
-            f"{secteur or 'similaire au vôtre'} sur ce type d'automatisation — "
-            f"si vous voulez, je vous montre concrètement à quoi ça ressemblerait "
-            f"pour {societe}."
+            f"Je travaille actuellement avec plusieurs entreprises sur ce type "
+            f"d'automatisation — si vous voulez, je vous montre concrètement à quoi "
+            f"ça ressemblerait pour {societe}."
         ),
     }
     tpl = TEMPLATES[template]
