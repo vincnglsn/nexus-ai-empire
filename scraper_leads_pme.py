@@ -13,8 +13,14 @@ site de l'entreprise, puis lit UNIQUEMENT les pages publiques de ce site
 (accueil, /contact, /mentions-legales) pour y trouver une adresse de contact
 via regex. Aucun compte, aucune connexion, aucun contournement d'accès.
 
-⚠️ Toujours relire manuellement les emails/prénoms avant un envoi de masse,
-et respecter le droit d'opposition (lien de désabonnement dans les templates).
+⚠️ Ce deviné-de-domaine n'est PAS fiable : testé en conditions réelles, il a
+produit des faux positifs (domaine appartenant à une entreprise différente,
+homonyme ou mot du dictionnaire squatté par un tiers sans rapport). Le
+résultat est donc écrit dans des colonnes séparées `email_suggere` /
+`site_web_suggere` — JAMAIS dans `email`/`site_web` — et n'est utilisé nulle
+part automatiquement. Ouvrez chaque site suggéré, confirmez que l'activité
+correspond, puis recopiez manuellement dans `email` avant tout envoi. Seule
+la colonne `email` est lue par campagne_emails_auto.py.
 
 Usage :
     python scraper_leads_pme.py --q "cabinet comptable" --departement 33 --limit 30
@@ -51,6 +57,17 @@ HEADERS_HTTP = {"User-Agent": "Mozilla/5.0 (prospection B2B; contact manuel avan
 EMAIL_RE = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}")
 DOMAINES_EXCLUS = ("sentry.io", "wixpress.com", "example.com", "w3.org",
                     "godaddy.com", "cloudflare.com", "schema.org", ".png", ".jpg", ".svg")
+
+# Mots trop génériques (secteur, forme juridique...) pour servir de preuve qu'un
+# domaine deviné correspond bien à l'entreprise recherchée — un nom de personne
+# ou un mot commun peut être un domaine squatté par un site totalement différent.
+MOTS_GENERIQUES = {
+    "agence", "communication", "communications", "immobiliere", "immobilier",
+    "conseil", "conseils", "cabinet", "groupe", "societe", "entreprise",
+    "gestion", "services", "service", "strategie", "reseau", "reseaux",
+    "publicite", "publicitaire", "regie", "media", "medias", "diffusion",
+    "national", "france", "sarl", "sasu", "associes",
+}
 
 
 # ─── Récupération des entreprises (API officielle) ─────────────────────────
@@ -116,8 +133,9 @@ def extraire_ligne(ent):
     return {
         "societe": ent.get("nom_complet", "").title(),
         "prenom": prenom,
-        "email": "",
-        "site_web": "",
+        "email": "",  # laissé vide par le scraper : ne doit être rempli qu'après vérification humaine
+        "email_suggere": "",
+        "site_web_suggere": "",
         "secteur": ent.get("activite_principale", ""),
         "ca_estime": ca_estime,
         "effectif": f"{bornes[0]}-{bornes[1]}" if bornes[1] < 999999 else f"{bornes[0]}+",
@@ -143,8 +161,33 @@ def slugifier(nom):
     return nom[:DNS_LABEL_MAX]
 
 
+def mots_distinctifs(societe):
+    """Mots du nom d'entreprise assez spécifiques pour vérifier qu'un site correspond bien."""
+    nom = re.sub(r"\(.*?\)", "", societe)
+    nom_ascii = unicodedata.normalize("NFKD", nom).encode("ascii", "ignore").decode().lower()
+    mots = re.findall(r"[a-z]{4,}", nom_ascii)
+    return [m for m in mots if m not in MOTS_GENERIQUES]
+
+
+def page_correspond_a_societe(html_text, societe):
+    """Vérifie qu'au moins un mot distinctif du nom d'entreprise apparaît sur la page.
+
+    Un slug généré à partir d'un nom de personne ou d'un mot courant peut
+    correspondre à un domaine squatté par un site totalement différent
+    (ex: 'adeleperrin.com' peut exister sans rapport avec l'entreprise
+    'Adèle Perrin (Agence AP Communication)'). Sans mot distinctif à
+    vérifier (nom trop générique), on ne peut pas garantir la correspondance
+    et on rejette plutôt que de risquer un faux positif.
+    """
+    mots = mots_distinctifs(societe)
+    if not mots:
+        return False
+    texte = unicodedata.normalize("NFKD", html_text).encode("ascii", "ignore").decode().lower()
+    return any(m in texte for m in mots)
+
+
 def deviner_site(societe):
-    """Teste quelques variantes de domaine plausibles et retourne la première qui répond."""
+    """Teste quelques variantes de domaine plausibles et retourne la première qui répond ET dont le contenu correspond réellement à l'entreprise."""
     slug = slugifier(societe)
     if not slug:
         return None
@@ -152,7 +195,7 @@ def deviner_site(societe):
         url = f"https://{domaine}"
         try:
             r = requests.get(url, headers=HEADERS_HTTP, timeout=6, allow_redirects=True)
-            if r.status_code == 200 and len(r.text) > 200:
+            if r.status_code == 200 and len(r.text) > 200 and page_correspond_a_societe(r.text, societe):
                 return r.url.rstrip("/")
         except Exception:
             # Domaine invalide, DNS KO, TLS KO, timeout... on essaie juste la variante suivante.
@@ -182,11 +225,15 @@ def extraire_email(url_base):
 
 
 def enrichir_ligne(ligne):
+    """Devine un site + email possibles. Écrit dans email_suggere/site_web_suggere,
+    JAMAIS dans email/site_web directement : un domaine deviné peut correspondre à
+    une entreprise totalement différente (voir mots_distinctifs/page_correspond_a_societe) —
+    la vérification humaine avant tout envoi n'est pas optionnelle."""
     site = deviner_site(ligne["societe"])
     if not site:
         return ligne
-    ligne["site_web"] = site
-    ligne["email"] = extraire_email(site)
+    ligne["site_web_suggere"] = site
+    ligne["email_suggere"] = extraire_email(site)
     return ligne
 
 
@@ -205,7 +252,7 @@ def main():
     args = parser.parse_args()
 
     if not args.q and not args.naf:
-        print("⚠️  Précisez au moins --q (recherche libre) ou --naf (codes NAF).")
+        print("[ATTENTION] Précisez au moins --q (recherche libre) ou --naf (codes NAF).")
         sys.exit(1)
 
     print(f"[INFO] Recherche en cours (q='{args.q}', naf='{args.naf}', departement='{args.departement}')...")
@@ -218,24 +265,27 @@ def main():
     lignes = [extraire_ligne(e) for e in entreprises]
 
     if args.enrichir:
-        print("[INFO] Enrichissement site web + email (best-effort)...")
+        print("[INFO] Recherche de site web + email (suggestions à vérifier manuellement)...")
         for i, ligne in enumerate(lignes):
             enrichir_ligne(ligne)
-            statut = ligne["email"] or "— pas trouvé"
+            statut = f"suggéré (à vérifier) : {ligne['email_suggere']}" if ligne["email_suggere"] else "— pas trouvé"
             print(f"  [{i+1}/{len(lignes)}] {ligne['societe'][:40]:40s} -> {statut}")
 
     champs = ["email", "prenom", "societe", "secteur", "ca_estime",
-              "effectif", "ville", "code_postal", "site_web", "siret", "siren"]
+              "effectif", "ville", "code_postal", "email_suggere", "site_web_suggere", "siret", "siren"]
     with open(args.out, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=champs)
         writer.writeheader()
         writer.writerows(lignes)
 
-    avec_email = sum(1 for l in lignes if l["email"])
+    suggeres = sum(1 for l in lignes if l["email_suggere"])
     print(f"\n[OK] Fichier écrit : {args.out}")
-    print(f"[OK] {avec_email}/{len(lignes)} lead(s) avec email trouvé automatiquement.")
-    if avec_email < len(lignes):
-        print("[INFO] Complétez manuellement les emails manquants (LinkedIn, site web, annuaire) avant l'envoi.")
+    print(f"[OK] {suggeres}/{len(lignes)} email(s) SUGGÉRÉ(S) (colonne email_suggere) — PAS vérifiés.")
+    print("[ATTENTION] Un domaine deviné par nom peut appartenir à une tout autre entreprise")
+    print("     (testé en conditions réelles : faux positifs fréquents sur des noms courts/génériques).")
+    print("[INFO] Vérifiez chaque email_suggere (ouvrez le site, confirmez l'activité) avant de le")
+    print("       recopier dans la colonne 'email' — seule la colonne 'email' est utilisée par")
+    print("       campagne_emails_auto.py.")
 
 
 if __name__ == "__main__":
