@@ -1,12 +1,23 @@
 """
-InvoiceGuard AI — Campagne Cold Emails Automatisée
+Campagne Cold Emails Automatisée
 Envoie les emails de prospection via Gmail SMTP avec rate limiting
 et suivi de campagne. 100% automatique.
+
+Couvre deux campagnes :
+- InvoiceGuard AI (templates pme / pme_btp / ec)
+- AI Automation Done-For-You (templates auto_sav / auto_prospection / auto_contenu
+  + séquence de relance à 4 touches J0/J3/J7/J14)
 
 Usage:
     python campagne_emails_auto.py --liste prospects.csv --template pme
     python campagne_emails_auto.py --liste experts.csv --template ec
     python campagne_emails_auto.py --demo   # Simule sans envoyer
+
+    # Séquence "AI Automation" (même --liste à chaque étape, l'état est suivi automatiquement) :
+    python campagne_emails_auto.py --liste leads.csv --template auto_sav --etape 1
+    python campagne_emails_auto.py --liste leads.csv --etape 2   # relance J3
+    python campagne_emails_auto.py --liste leads.csv --etape 3 --exemple-client "un cabinet comptable a réduit de 60% le temps passé sur les relances clients"   # relance J7
+    python campagne_emails_auto.py --liste leads.csv --etape 4   # clôture J14
 
 Formats CSV acceptés:
     email, prenom, societe, secteur, ca_estime (optionnel)
@@ -21,6 +32,7 @@ import json
 import argparse
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import make_msgid
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -93,7 +105,120 @@ Vincent | InvoiceGuard AI
 → https://baby-rss-textile-rap.trycloudflare.com
 """,
     },
+    # ─── AI Automation Done-For-You ────────────────────────────────────────
+    "auto_sav": {
+        "sujet": "{societe}, une question sur votre SAV",
+        "corps": """{salutation}
+
+Question directe : combien de temps passez-vous chaque semaine à répondre
+aux mêmes questions par email chez {societe} — suivi de commande, FAQ,
+relances clients ?
+
+Je mets en place des agents IA qui traitent ça automatiquement, branchés
+directement sur votre boîte mail. Livré en 5 jours, pas d'abonnement
+logiciel supplémentaire à gérer.
+
+15 min cette semaine pour voir si ça a du sens pour vous ?
+
+Vinc
+""",
+    },
+    "auto_prospection": {
+        "sujet": "{societe}, une question sur votre prospection",
+        "corps": """{salutation}
+
+Question directe : combien de leads qualifiés {societe} pourrait traiter
+en plus par mois si la recherche et le premier contact étaient automatisés ?
+
+Je mets en place un pipeline qui scrape les prospects correspondant à votre
+cible, lance une séquence de cold email automatisée, et vous remonte
+uniquement les réponses. Livré en 5 jours.
+
+15 min cette semaine pour voir si ça a du sens pour vous ?
+
+Vinc
+""",
+    },
+    "auto_contenu": {
+        "sujet": "{societe}, une question sur votre contenu",
+        "corps": """{salutation}
+
+Question directe : combien de temps {societe} passe chaque semaine à
+produire et publier du contenu sur LinkedIn/Instagram ?
+
+Je mets en place un système qui génère et publie vos posts automatiquement
+à partir de votre activité. Livré en 5 jours.
+
+15 min cette semaine pour voir si ça a du sens pour vous ?
+
+Vinc
+""",
+    },
+    "auto_relance_j3": {
+        "corps": """{salutation}
+
+Je me permets de relancer — je sais que ça part vite dans les priorités.
+
+Pour être concret : ça se livre en 5 jours, sans engagement long, et vous
+testez avec vos propres données avant de valider quoi que ce soit.
+
+Un créneau de 15 min cette semaine ou la suivante ?
+
+Vinc
+""",
+    },
+    "auto_relance_j7": {
+        "corps": """{salutation}
+
+Pas de réponse, ce n'est pas grave — je me doute que ce n'est peut-être pas
+le bon moment ou pas la bonne priorité.
+
+{exemple_client}
+
+Si ça peut être utile pour {societe}, je vous montre en 15 min comment
+ça marcherait avec votre cas précis. Sinon, dites-moi et je n'insiste pas.
+
+Vinc
+""",
+    },
+    "auto_relance_j14": {
+        "corps": """{salutation}
+
+Je vais arrêter de vous solliciter sur ce sujet — si le besoin revient
+({offre_label} qui prend trop de temps), vous avez mon mail.
+
+Bonne continuation à {societe}.
+
+Vinc
+""",
+    },
 }
+
+# ─── Identité d'envoi par famille de campagne ──────────────────────────────────
+
+MARQUES = {
+    "invoiceguard": (
+        "Vincent — InvoiceGuard AI",
+        'InvoiceGuard AI · <a href="https://invoiceguard.fr">invoiceguard.fr</a> · Se désabonner',
+    ),
+    "auto": (
+        "Vinc",
+        "Automatisation IA sur-mesure · Se désabonner",
+    ),
+}
+
+FAMILLE_TEMPLATE = {
+    "pme": "invoiceguard", "pme_btp": "invoiceguard", "ec": "invoiceguard",
+    "auto_sav": "auto", "auto_prospection": "auto", "auto_contenu": "auto",
+    "auto_relance_j3": "auto", "auto_relance_j7": "auto", "auto_relance_j14": "auto",
+}
+
+OFFRE_LABEL = {
+    "auto_sav": "SAV", "auto_prospection": "prospection", "auto_contenu": "contenu",
+}
+
+# Étape de séquence -> template de relance à utiliser (étape 1 = mail initial, template au choix)
+ETAPE_TEMPLATE_RELANCE = {2: "auto_relance_j3", 3: "auto_relance_j7", 4: "auto_relance_j14"}
 
 # ─── Envoi SMTP ───────────────────────────────────────────────────────────────
 
@@ -104,17 +229,32 @@ def envoyer_email_smtp(
     gmail_user: str,
     gmail_password: str,
     expediteur_nom: str = "Vincent — InvoiceGuard AI",
+    footer_html: str = 'InvoiceGuard AI · <a href="https://invoiceguard.fr">invoiceguard.fr</a> · Se désabonner',
+    in_reply_to: str = "",
+    references: str = "",
     mode_demo: bool = False,
 ) -> dict:
-    """Envoie un email via Gmail SMTP avec App Password."""
+    """Envoie un email via Gmail SMTP avec App Password.
+
+    Retourne le Message-ID utilisé, pour pouvoir y répondre (même fil de
+    discussion) lors de la relance suivante de la séquence.
+    """
+    domaine = gmail_user.split("@")[-1] if gmail_user and "@" in gmail_user else None
+    message_id = make_msgid(domain=domaine)
+
     if mode_demo:
-        return {"success": True, "mode": "DEMO", "to": to}
+        return {"success": True, "mode": "DEMO", "to": to, "message_id": message_id}
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = sujet
-        msg["From"]    = f"{expediteur_nom} <{gmail_user}>"
-        msg["To"]      = to
+        msg["Subject"]    = sujet
+        msg["From"]       = f"{expediteur_nom} <{gmail_user}>"
+        msg["To"]         = to
+        msg["Message-ID"] = message_id
+        if in_reply_to:
+            msg["In-Reply-To"] = in_reply_to
+        if references:
+            msg["References"] = references
 
         # Corps texte brut
         msg.attach(MIMEText(corps, "plain", "utf-8"))
@@ -125,7 +265,7 @@ def envoyer_email_smtp(
 {html_corps}
 <br><br>
 <hr style="border:1px solid #eee">
-<small style="color:#888">InvoiceGuard AI · <a href="https://invoiceguard.fr">invoiceguard.fr</a> · Se désabonner</small>
+<small style="color:#888">{footer_html}</small>
 </body></html>"""
         msg.attach(MIMEText(html, "html", "utf-8"))
 
@@ -133,9 +273,9 @@ def envoyer_email_smtp(
             server.login(gmail_user, gmail_password)
             server.sendmail(gmail_user, [to], msg.as_bytes())
 
-        return {"success": True, "to": to}
+        return {"success": True, "to": to, "message_id": message_id}
     except Exception as e:
-        return {"success": False, "to": to, "error": str(e)}
+        return {"success": False, "to": to, "error": str(e), "message_id": message_id}
 
 
 # ─── Personnalisation ─────────────────────────────────────────────────────────
@@ -163,11 +303,52 @@ def personnaliser(template: str, contact: dict) -> tuple[str, str]:
     return sujet, corps
 
 
+def personnaliser_auto(template: str, contact: dict, exemple_client: str = "") -> tuple[str, str]:
+    """Personnalise les templates de la séquence 'AI Automation Done-For-You'."""
+    prenom = (contact.get("prenom") or "").strip()
+    societe = contact.get("societe") or "votre entreprise"
+    secteur = contact.get("secteur") or ""
+    offre_label = OFFRE_LABEL.get(template, "automatisation")
+
+    variables = {
+        "salutation":     f"Bonjour {prenom}," if prenom else "Bonjour,",
+        "societe":        societe,
+        "secteur":        secteur,
+        "offre_label":    offre_label,
+        # Si aucun exemple réel n'est fourni (--exemple-client), on reste volontairement
+        # générique plutôt que d'inventer un chiffre ou un témoignage client fictif.
+        "exemple_client": exemple_client or (
+            f"Je travaille actuellement avec plusieurs entreprises du secteur "
+            f"{secteur or 'similaire au vôtre'} sur ce type d'automatisation — "
+            f"si vous voulez, je vous montre concrètement à quoi ça ressemblerait "
+            f"pour {societe}."
+        ),
+    }
+    tpl = TEMPLATES[template]
+    sujet = tpl["sujet"].format(**variables) if "sujet" in tpl else ""
+    corps = tpl["corps"].format(**variables)
+    return sujet, corps
+
+
 # ─── Suivi de campagne ────────────────────────────────────────────────────────
 
 def log_campagne(result: dict, log_path: str):
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(json.dumps({**result, "timestamp": datetime.now().isoformat()}, ensure_ascii=False) + "\n")
+
+
+# ─── Suivi de séquence (relances J3/J7/J14) ────────────────────────────────────
+
+def charger_etat_sequence(path: str) -> dict:
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def sauver_etat_sequence(etat: dict, path: str):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(etat, f, ensure_ascii=False, indent=2)
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -177,18 +358,34 @@ def lancer_campagne(
     template: str,
     gmail_user: str,
     gmail_password: str,
+    etape: int = 1,
+    etat_path: str = "",
+    exemple_client: str = "",
     mode_demo: bool = False,
     delai_secondes: float = 45.0,
     max_emails: int = 50,
 ):
+    etat_path = etat_path or f"etat_sequence_{os.path.splitext(os.path.basename(liste_csv))[0]}.json"
+    etat = charger_etat_sequence(etat_path)
+
+    # À partir de l'étape 2, le template est celui de la relance correspondante
+    # (le mail initial peut être auto_sav / auto_prospection / auto_contenu, la
+    # relance qui suit est la même pour tous — --template est alors ignoré).
+    if etape > 1:
+        template = ETAPE_TEMPLATE_RELANCE[etape]
+
+    famille = FAMILLE_TEMPLATE.get(template, "invoiceguard")
+    expediteur_nom, footer_html = MARQUES[famille]
+
     log_path = f"campagne_{template}_{datetime.now().strftime('%Y%m%d_%H%M')}.log"
-    envoyes, erreurs = 0, 0
+    envoyes, erreurs, ignores = 0, 0, 0
 
     sep = "=" * 60
     print(f"\n{sep}")
-    print(f"  InvoiceGuard AI - Campagne '{template.upper()}'")
+    print(f"  Campagne '{template.upper()}' — Étape {etape}")
     print(f"  Mode : {'DEMO' if mode_demo else 'PRODUCTION'}")
     print(f"  Liste : {liste_csv}")
+    print(f"  État séquence : {etat_path}")
     print(f"  Delai inter-email : {delai_secondes}s | Max : {max_emails}")
     print(f"{sep}\n")
 
@@ -197,7 +394,7 @@ def lancer_campagne(
         contacts = list(reader)
 
     total = min(len(contacts), max_emails)
-    print(f"[INFO] {total} contacts a contacter\n")
+    print(f"[INFO] {total} contacts a traiter\n")
 
     for i, contact in enumerate(contacts[:max_emails]):
         email = contact.get("email", "").strip()
@@ -205,9 +402,34 @@ def lancer_campagne(
             print(f"  [{i+1}/{total}] SKIP Email invalide : '{email}'")
             continue
 
-        sujet, corps = personnaliser(template, contact)
-        result = envoyer_email_smtp(email, sujet, corps, gmail_user, gmail_password, mode_demo=mode_demo)
-        log_campagne({**result, "sujet": sujet, "contact": contact}, log_path)
+        etat_contact = etat.get(email, {})
+        sujet_original = etat_contact.get("sujet", "")
+
+        if etape == 1:
+            if template in ("pme", "pme_btp", "ec"):
+                sujet, corps = personnaliser(template, contact)
+            else:
+                sujet, corps = personnaliser_auto(template, contact, exemple_client)
+            in_reply_to = references = ""
+        else:
+            # On ne relance que les contacts arrivés au bon stade de la séquence.
+            # Un contact absent de l'état (jamais contacté) ou resté à une étape
+            # antérieure (retiré manuellement après une réponse, par ex.) est ignoré.
+            if etat_contact.get("etape") != etape - 1:
+                ignores += 1
+                print(f"  [{i+1}/{total}] SKIP {email} -- pas au stade {etape-1} de la sequence")
+                continue
+            _, corps = personnaliser_auto(template, contact, exemple_client)
+            sujet = sujet_original if sujet_original.startswith("Re: ") else f"Re: {sujet_original}"
+            in_reply_to = references = etat_contact.get("message_id", "")
+
+        result = envoyer_email_smtp(
+            email, sujet, corps, gmail_user, gmail_password,
+            expediteur_nom=expediteur_nom, footer_html=footer_html,
+            in_reply_to=in_reply_to, references=references,
+            mode_demo=mode_demo,
+        )
+        log_campagne({**result, "sujet": sujet, "etape": etape, "contact": contact}, log_path)
 
         icone = "OK " if result["success"] else "ERR"
         mode_txt = " [DEMO]" if mode_demo else ""
@@ -215,6 +437,12 @@ def lancer_campagne(
 
         if result["success"]:
             envoyes += 1
+            etat[email] = {
+                "etape": etape,
+                "sujet": sujet if etape == 1 else sujet_original,
+                "message_id": result["message_id"],
+                "date": datetime.now().isoformat(),
+            }
         else:
             erreurs += 1
             print(f"     Erreur : {result.get('error','?')}")
@@ -223,17 +451,27 @@ def lancer_campagne(
             print(f"     Pause {delai_secondes}s...")
             time.sleep(delai_secondes)
 
+    sauver_etat_sequence(etat, etat_path)
+
     print(f"\n{sep}")
     print(f"  Campagne terminee")
-    print(f"  Envoyes : {envoyes} | Erreurs : {erreurs}")
+    print(f"  Envoyes : {envoyes} | Erreurs : {erreurs} | Ignores (mauvais stade) : {ignores}")
     print(f"  Log : {log_path}")
+    print(f"  Etat sequence : {etat_path}")
     print(f"{sep}\n")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Campagne emails InvoiceGuard AI")
-    parser.add_argument("--liste",    default="prospects_pme.csv", help="Fichier CSV de prospects")
-    parser.add_argument("--template", default="pme", choices=["pme", "pme_btp", "ec"], help="Template email")
+    parser = argparse.ArgumentParser(description="Campagne emails — InvoiceGuard AI & AI Automation Done-For-You")
+    parser.add_argument("--liste",    default="prospects_pme.csv", help="Fichier CSV de prospects (ex: leads.csv genere par scraper_leads_pme.py)")
+    parser.add_argument("--template", default="pme",
+                         choices=["pme", "pme_btp", "ec", "auto_sav", "auto_prospection", "auto_contenu"],
+                         help="Template du mail initial (etape 1 uniquement — ignore si --etape > 1)")
+    parser.add_argument("--etape",    type=int, default=1, choices=[1, 2, 3, 4],
+                         help="Etape de la sequence AI Automation : 1=mail initial (J0), 2=relance J3, 3=relance J7, 4=cloture J14")
+    parser.add_argument("--etat",     default="", help="Fichier JSON de suivi de sequence (defaut : etat_sequence_<liste>.json)")
+    parser.add_argument("--exemple-client", default="", dest="exemple_client",
+                         help="Exemple client reel a citer en relance J7 (sinon formulation generique, sans chiffre invente)")
     parser.add_argument("--demo",     action="store_true", help="Mode démonstration (ne pas envoyer)")
     parser.add_argument("--max",      type=int, default=20, help="Nombre max d'emails")
     parser.add_argument("--delai",    type=float, default=45.0, help="Délai entre emails (secondes)")
@@ -257,6 +495,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if not os.path.exists(args.liste):
+        if args.etape > 1:
+            print(f"\n⚠️  Fichier introuvable : {args.liste}")
+            print("Les relances (etape > 1) doivent utiliser la meme liste que l'etape 1.")
+            sys.exit(1)
         # Crée un fichier de demo
         demo_csv = args.liste
         with open(demo_csv, "w", encoding="utf-8", newline="") as f:
@@ -283,6 +525,9 @@ if __name__ == "__main__":
         template=args.template,
         gmail_user=gmail_user,
         gmail_password=gmail_password,
+        etape=args.etape,
+        etat_path=args.etat,
+        exemple_client=args.exemple_client,
         mode_demo=args.demo,
         delai_secondes=args.delai,
         max_emails=args.max,
