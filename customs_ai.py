@@ -26,7 +26,7 @@ if license_key not in ["DEMO123", "NEXUS-CUSTOMS-2026"]:
         <h2>🔒 Module Premium Verrouillé</h2>
         <p>L'intelligence artificielle d'analyse douanière est une extension (99€).</p>
         <a href="https://buy.stripe.com/14A8wPf7q81R0jP4Kx87K01" target="_blank" style="background-color: #eab308; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Débloquer le Module Douane (99€)</a>
-        <p style="font-size: 12px; margin-top: 15px; color: gray;">Mot de passe VIP (après achat) : NEXUS-CUSTOMS-2026</p>
+        <p style="font-size: 12px; margin-top: 15px; color: gray;">Le mot de passe VIP vous sera envoyé par email après votre paiement.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop()

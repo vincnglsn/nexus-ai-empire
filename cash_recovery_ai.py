@@ -26,7 +26,7 @@ if license_key not in ["DEMO123", "CASHFLOW-2026"]:
         <h2>💸 Cash-Flow AI Verrouillé</h2>
         <p>Récupérez la trésorerie bloquée chez vos clients retardataires. L'IA génère des relances et mises en demeure intraîtables.</p>
         <a href="https://buy.stripe.com/cNieVd0cwgyn2rXgtf87K02" style="background-color: #22c55e; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Acheter une Licence (99€/mois)</a>
-        <p style="font-size: 12px; margin-top: 15px; color: gray;">Mot de passe de test : CASHFLOW-2026</p>
+        <p style="font-size: 12px; margin-top: 15px; color: gray;">Votre clé d'accès vous sera envoyée par email après votre paiement.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop()

@@ -48,7 +48,7 @@ if not verify_license(license_key):
         <h2>🔒 Logiciel Verrouillé</h2>
         <p>Abonnez-vous à 49€/mois (résiliable à tout moment) pour débloquer l'Intelligence Artificielle et analyser vos fichiers Excel.</p>
         <a href="https://buy.stripe.com/8x2aEX6AU1Dt8Qldh387K00" target="_blank" style="background-color: #635bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Payer de manière sécurisée avec Stripe</a>
-        <p style="font-size: 12px; margin-top: 15px; color: gray;">Mot de passe VIP (après achat) : NEXUS-PRO-2026</p>
+        <p style="font-size: 12px; margin-top: 15px; color: gray;">Le mot de passe VIP vous sera envoyé par email après votre paiement.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop() # Arrête l'exécution ici si pas de licence
