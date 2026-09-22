@@ -130,13 +130,17 @@ def extraire_ligne(ent):
 
 # ─── Enrichissement email (best-effort, sur le site propre de l'entreprise) ─
 
+DNS_LABEL_MAX = 63  # limite RFC 1035 pour un label de domaine
+
+
 def slugifier(nom):
+    nom = re.sub(r"\(.*?\)", "", nom)  # retire les compléments entre parenthèses (souvent redondants)
     nom = unicodedata.normalize("NFKD", nom).encode("ascii", "ignore").decode()
     nom = nom.lower()
     for suf in SUFFIXES_LEGAUX:
         nom = re.sub(rf"\b{re.escape(suf)}\b", "", nom)
     nom = re.sub(r"[^a-z0-9]", "", nom)
-    return nom
+    return nom[:DNS_LABEL_MAX]
 
 
 def deviner_site(societe):
@@ -150,7 +154,8 @@ def deviner_site(societe):
             r = requests.get(url, headers=HEADERS_HTTP, timeout=6, allow_redirects=True)
             if r.status_code == 200 and len(r.text) > 200:
                 return r.url.rstrip("/")
-        except requests.RequestException:
+        except Exception:
+            # Domaine invalide, DNS KO, TLS KO, timeout... on essaie juste la variante suivante.
             continue
     return None
 
@@ -171,7 +176,7 @@ def extraire_email(url_base):
                         if c.lower().startswith(prefixe):
                             return c
                 return candidats[0]
-        except requests.RequestException:
+        except Exception:
             continue
     return ""
 
