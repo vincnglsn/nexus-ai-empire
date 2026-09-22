@@ -406,6 +406,13 @@ def lancer_campagne(
         sujet_original = etat_contact.get("sujet", "")
 
         if etape == 1:
+            # Protection anti-doublon : si ce contact a déjà été contacté (même lors
+            # d'un run précédent, ex. interrompu par --max), on ne renvoie pas un
+            # second mail initial identique.
+            if etat_contact.get("etape"):
+                ignores += 1
+                print(f"  [{i+1}/{total}] SKIP {email} -- deja contacte le {etat_contact.get('date','?')}")
+                continue
             if template in ("pme", "pme_btp", "ec"):
                 sujet, corps = personnaliser(template, contact)
             else:
@@ -437,12 +444,16 @@ def lancer_campagne(
 
         if result["success"]:
             envoyes += 1
-            etat[email] = {
-                "etape": etape,
-                "sujet": sujet if etape == 1 else sujet_original,
-                "message_id": result["message_id"],
-                "date": datetime.now().isoformat(),
-            }
+            # Un envoi DEMO ne part réellement à personne : l'état de séquence ne
+            # doit avancer que sur un vrai envoi, sinon un dry-run bloquerait ensuite
+            # le vrai envoi via la protection anti-doublon.
+            if not mode_demo:
+                etat[email] = {
+                    "etape": etape,
+                    "sujet": sujet if etape == 1 else sujet_original,
+                    "message_id": result["message_id"],
+                    "date": datetime.now().isoformat(),
+                }
         else:
             erreurs += 1
             print(f"     Erreur : {result.get('error','?')}")

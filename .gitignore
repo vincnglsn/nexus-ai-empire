@@ -16,7 +16,8 @@ __pycache__/
 data/
 *.db
 prospects_pme.csv
-leads.csv
+leads*.csv
+etat_sequence_*.json
 scratch_5_cold_emails_draft.md
 
 # Logs
