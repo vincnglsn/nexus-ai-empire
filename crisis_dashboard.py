@@ -85,6 +85,18 @@ WAR_RISK_RANGES = {
             "Reefer / équipement spécial": (3500, 4000),
         },
     },
+    "Mer Rouge (Djeddah, King Abdullah, Jordanie)": {
+        "date": "août 2026",
+        "sources": [
+            ("Maersk — surcharge Mer Rouge (Océanie-Moyen-Orient) : 1 800 / 3 000 USD, jusqu'à 100% de plus que le Golfe", "https://www.indoneo.com/capital/maersk-red-sea-surcharge-oceania-middle-east-august-2026/"),
+            ("MSC — Péninsule arabique vers Afrique/Océan Indien : 2 000 / 3 000 / 4 000 USD", "https://www.yqn.com/intro/blog/post/war_risk_surcharge"),
+        ],
+        "types": {
+            "20' dry": (1800, 2000),
+            "40' dry": (3000, 3000),
+            "Reefer / équipement spécial": (1900, 3800),
+        },
+    },
 }
 
 
