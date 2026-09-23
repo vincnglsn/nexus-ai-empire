@@ -69,6 +69,66 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Fourchettes publiques des surcharges conflit par corridor (USD par conteneur).
+# Montants issus des avis transporteurs publiés ; à réviser dès qu'un transporteur les modifie.
+WAR_RISK_RANGES = {
+    "Golfe Persique (EAU, Qatar, Arabie saoudite, Koweït, Bahreïn, Irak, Oman)": {
+        "date": "mars 2026",
+        "sources": [
+            ("Hapag-Lloyd — War Risk Surcharge : 1 500 USD/TEU, 3 500 USD reefer", "https://www.ttl-co.com/en/blog/war-risk-surcharge-gulf-shipping-2026"),
+            ("CMA CGM — Emergency Conflict Surcharge : 2 000 / 3 000 / 4 000 USD", "https://www.ttl-co.com/en/blog/war-risk-surcharge-gulf-shipping-2026"),
+            ("Maersk — Emergency Freight Rate : 1 800 / 3 000 / 3 800 USD", "https://www.ttl-co.com/en/blog/war-risk-surcharge-gulf-shipping-2026"),
+        ],
+        "types": {
+            "20' dry": (1500, 2000),
+            "40' dry": (3000, 3000),
+            "Reefer / équipement spécial": (3500, 4000),
+        },
+    },
+}
+
+
+def auditer_surcharge(montant, bas, haut):
+    if montant > haut:
+        return "haut", montant - haut
+    if montant < bas:
+        return "bas", bas - montant
+    return "ok", 0
+
+
+st.subheader("🔎 Audit de surcharge « war risk »")
+st.markdown("Votre transporteur vous facture une surcharge conflit ? Vérifiez qu'elle correspond aux montants publiés par les grands armateurs.")
+
+col_a, col_b, col_c = st.columns(3)
+with col_a:
+    corridor = st.selectbox("Corridor", list(WAR_RISK_RANGES.keys()))
+with col_b:
+    type_conteneur = st.selectbox("Type de conteneur", list(WAR_RISK_RANGES[corridor]["types"].keys()))
+with col_c:
+    montant_facture = st.number_input("Surcharge facturée (USD / conteneur)", min_value=0, step=50, value=0)
+
+if montant_facture > 0:
+    bas, haut = WAR_RISK_RANGES[corridor]["types"][type_conteneur]
+    fourchette = f"{bas:,} USD" if bas == haut else f"{bas:,} – {haut:,} USD"
+    verdict, ecart = auditer_surcharge(montant_facture, bas, haut)
+    if verdict == "haut":
+        st.error(f"⚠️ Au-dessus des montants publiés ({fourchette}) : {ecart:,} USD de plus par conteneur. Demandez à votre transporteur le détail et la justification de cette surcharge.")
+    elif verdict == "bas":
+        st.success(f"✅ En dessous des montants publiés ({fourchette}), {ecart:,} USD de moins par conteneur.")
+    else:
+        st.info(f"Dans la fourchette publiée par les grands armateurs ({fourchette}).")
+
+    infos = WAR_RISK_RANGES[corridor]
+    st.caption(
+        f"Références : avis transporteurs publiés en {infos['date']}, relayés par la presse spécialisée accessible gratuitement. "
+        "Les montants évoluent avec la situation : vérifiez toujours auprès de votre transporteur. "
+        "Une surcharge carburant d'urgence (EBS/EFS) peut s'ajouter séparément."
+    )
+    for libelle, url in infos["sources"]:
+        st.caption(f"• [{libelle}]({url})")
+
+st.divider()
+
 # Import du fichier Excel par le client
 st.subheader("1. Importez vos données (Bring Your Own Excel)")
 uploaded_file = st.file_uploader("Glissez votre fichier Excel ou CSV ici", type=["csv", "xlsx"])
