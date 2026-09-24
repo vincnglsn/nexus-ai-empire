@@ -63,9 +63,10 @@ st.divider()
 # Alerte Worldmonitor en direct
 st.markdown("""
 <div class="alert-box">
-    <h4 style="margin-top:0; color:white;">🚨 ALERTE OSINT EN COURS : DÉTROIT D'ORMUZ & MER ROUGE</h4>
-    Posture "Élevée" sur Mer Rouge/Yémen et Mer de Chine méridionale. Brouillage GPS actif en Mer Noire, Baltique et Golfe Persique.
-    Arrêt de l'oléoduc Est-Ouest saoudien. Probabilité de perturbation du trafic Détroit d'Ormuz : 35-40% (marché). Risque élevé de surcoût fret et délais pour les flux Asie/Moyen-Orient-Europe.
+    <h4 style="margin-top:0; color:white;">🚨 ALERTE OSINT EN COURS : ORMUZ ET BAB EL-MANDEB TOUS DEUX SOUS TENSION</h4>
+    Les Houthis contrôlent désormais les deux chenaux du détroit de Bab el-Mandeb (îles Mayun/Perim puis Hanish, prises les 11-12/09) : la Mer Rouge/Suez n'est plus une route de repli fiable face à Ormuz, les deux corridors sont contestés simultanément.
+    Brouillage GPS actif en Mer Noire, Baltique et Golfe Persique. Arrêt de l'oléoduc Est-Ouest saoudien. Probabilité de perturbation du trafic Détroit d'Ormuz : 35-40% (marché).
+    Conséquence directe : le fret aérien Chine→Europe dépasse 4,80 $/kg (+75% vs avant-conflit), avec 13-15% de la capacité aérienne mondiale clouée au sol.
 </div>
 """, unsafe_allow_html=True)
 
@@ -181,12 +182,13 @@ else:
                     
                     prompt = f"""
                     Tu es une IA de crise Supply Chain (SaaS).
-                    Contexte de crise actuel : posture "Élevée" sur Mer Rouge/Yémen et Mer de Chine méridionale, brouillage GPS en Mer Noire/Baltique/Golfe Persique,
-                    arrêt de l'oléoduc Est-Ouest saoudien, et probabilité de 35-40% de perturbation du trafic au Détroit d'Ormuz. Voici les données extraites du fichier Excel du client :
+                    Contexte de crise actuel : les Houthis contrôlent les deux chenaux du détroit de Bab el-Mandeb depuis le 11-12/09 (îles Mayun/Perim puis Hanish) — la Mer Rouge/Suez n'est PAS une route de repli fiable, ce corridor est aussi contesté qu'Ormuz (35-40% de probabilité de perturbation, marché). Brouillage GPS en Mer Noire/Baltique/Golfe Persique, arrêt de l'oléoduc Est-Ouest saoudien.
+                    Le fret aérien Chine→Europe dépasse 4,80 $/kg (+75% vs avant-conflit), 13-15% de la capacité aérienne mondiale est clouée au sol : l'alternative aérienne coûte cher elle aussi.
+                    Voici les données extraites du fichier Excel du client :
                     {df.to_json()}
 
                     Rédige un plan de sauvetage (Contingency Plan) direct et professionnel.
-                    Trouve des fournisseurs alternatifs fictifs mais réalistes en Europe/US pour remplacer ces marchandises, estime le surcoût de fret aérien, et donne une marche à suivre claire.
+                    NE PROPOSE PAS le contournement par Suez/Bab el-Mandeb comme solution sûre — les deux corridors maritimes sont contestés simultanément. Trouve des fournisseurs alternatifs fictifs mais réalistes en Europe/US pour remplacer ces marchandises, chiffre l'arbitrage réel entre surcoût de fret aérien (au tarif actuel ~4,80 $/kg) et le coût du retard maritime, et donne une marche à suivre claire.
                     """
                     
                     response = client.models.generate_content(
